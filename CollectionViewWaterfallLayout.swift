@@ -13,7 +13,9 @@ public let CollectionViewWaterfallElementKindSectionHeader = "CollectionViewWate
 public let CollectionViewWaterfallElementKindSectionFooter = "CollectionViewWaterfallElementKindSectionFooter"
 
 @objc public protocol CollectionViewWaterfallLayoutDelegate: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, layout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize
+    @objc optional func collectionView(_ collectionView: UICollectionView, layout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize
+    
+    @objc optional func collectionView(_ collectionView: UICollectionView, layout: UICollectionViewLayout, ratioForItemAtIndexPath indexPath: NSIndexPath) -> Float
     
     @objc optional func collectionView(_ collectionView: UICollectionView, layout: UICollectionViewLayout, heightForHeaderInSection section: Int) -> Float
     
@@ -186,10 +188,16 @@ public class CollectionViewWaterfallLayout: UICollectionViewLayout {
                 
                 let xOffset = Float(sectionInset.left) + Float(itemWidth + minimumColumnSpacing) * Float(columnIndex)
                 let yOffset = columnHeights[columnIndex]
-                let itemSize = delegate.collectionView(collectionView, layout: self, sizeForItemAtIndexPath: indexPath)
+                let itemSize = delegate.collectionView?(collectionView, layout: self, sizeForItemAtIndexPath: indexPath)
+                let itemRatio = delegate.collectionView?(collectionView, layout: self, ratioForItemAtIndexPath: indexPath)
                 var itemHeight: Float = 0.0
-                if itemSize.height > 0 && itemSize.width > 0 {
+                
+                if let itemSize = itemSize,
+                   itemSize.height > 0,
+                   itemSize.width > 0 {
                     itemHeight = Float(itemSize.height) * itemWidth / Float(itemSize.width)
+                } else if let itemRatio = itemRatio {
+                    itemHeight = itemWidth * itemRatio
                 }
                 
                 attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath as IndexPath)
